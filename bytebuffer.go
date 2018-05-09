@@ -11,21 +11,21 @@ import "io"
 // Use Get for obtaining an empty byte buffer.
 type ByteBuffer struct {
 
-	// B is a byte buffer to use in append-like workloads.
+	// b is a byte buffer to use in append-like workloads.
 	// See example code for details.
-	B []byte
+	b []byte
 }
 
 // Len returns the size of the byte buffer.
 func (b *ByteBuffer) Len() int {
-	return len(b.B)
+	return len(b.b)
 }
 
 // ReadFrom implements io.ReaderFrom.
 //
 // The function appends all the data read from r to b.
 func (b *ByteBuffer) ReadFrom(r io.Reader) (int64, error) {
-	p := b.B
+	p := b.b
 	nStart := int64(len(p))
 	nMax := int64(cap(p))
 	n := nStart
@@ -45,7 +45,7 @@ func (b *ByteBuffer) ReadFrom(r io.Reader) (int64, error) {
 		nn, err := r.Read(p[n:])
 		n += int64(nn)
 		if err != nil {
-			b.B = p[:n]
+			b.b = p[:n]
 			n -= nStart
 			if err == io.EOF {
 				return n, nil
@@ -57,20 +57,20 @@ func (b *ByteBuffer) ReadFrom(r io.Reader) (int64, error) {
 
 // WriteTo implements io.WriterTo.
 func (b *ByteBuffer) WriteTo(w io.Writer) (int64, error) {
-	n, err := w.Write(b.B)
+	n, err := w.Write(b.b)
 	return int64(n), err
 }
 
-// Bytes returns b.B, i.e. all the bytes accumulated in the buffer.
+// Bytes returns b.b, i.e. all the bytes accumulated in the buffer.
 //
 // The purpose of this function is bytes.Buffer compatibility.
 func (b *ByteBuffer) Bytes() []byte {
-	return b.B
+	return b.b
 }
 
-// Write implements io.Writer - it appends p to ByteBuffer.B
+// Write implements io.Writer - it appends p to ByteBuffer.b
 func (b *ByteBuffer) Write(p []byte) (int, error) {
-	b.B = append(b.B, p...)
+	b.b = append(b.b, p...)
 	return len(p), nil
 }
 
@@ -80,32 +80,38 @@ func (b *ByteBuffer) Write(p []byte) (int, error) {
 //
 // The function always returns nil.
 func (b *ByteBuffer) WriteByte(c byte) error {
-	b.B = append(b.B, c)
+	b.b = append(b.b, c)
 	return nil
 }
 
-// WriteString appends s to ByteBuffer.B.
+// WriteString appends s to ByteBuffer.b.
 func (b *ByteBuffer) WriteString(s string) (int, error) {
-	b.B = append(b.B, s...)
+	b.b = append(b.b, s...)
 	return len(s), nil
 }
 
-// Set sets ByteBuffer.B to p.
+// Set sets ByteBuffer.b to p.
 func (b *ByteBuffer) Set(p []byte) {
-	b.B = append(b.B[:0], p...)
+	b.b = append(b.b[:0], p...)
 }
 
-// SetString sets ByteBuffer.B to s.
+// SetString sets ByteBuffer.b to s.
 func (b *ByteBuffer) SetString(s string) {
-	b.B = append(b.B[:0], s...)
+	b.b = append(b.b[:0], s...)
 }
 
-// String returns string representation of ByteBuffer.B.
+// String returns string representation of ByteBuffer.b.
 func (b *ByteBuffer) String() string {
-	return string(b.B)
+	return string(b.b)
 }
 
-// Reset makes ByteBuffer.B empty.
+// Reset makes ByteBuffer.b empty.
 func (b *ByteBuffer) Reset() {
-	b.B = b.B[:0]
+	b.b = b.b[:0]
+}
+
+// Reset makes ByteBuffer.b empty.
+func (b *ByteBuffer) Release() {
+	b.Reset()
+	Put(b)
 }

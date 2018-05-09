@@ -51,13 +51,13 @@ func (p *Pool) Get() *ByteBuffer {
 		return v.(*ByteBuffer)
 	}
 	return &ByteBuffer{
-		B: make([]byte, 0, atomic.LoadUint64(&p.defaultSize)),
+		b: make([]byte, 0, atomic.LoadUint64(&p.defaultSize)),
 	}
 }
 
 // Put returns byte buffer to the pool.
 //
-// ByteBuffer.B mustn't be touched after returning it to the pool.
+// ByteBuffer.b mustn't be touched after returning it to the pool.
 // Otherwise data races will occur.
 func Put(b *ByteBuffer) { defaultPool.Put(b) }
 
@@ -65,14 +65,14 @@ func Put(b *ByteBuffer) { defaultPool.Put(b) }
 //
 // The buffer mustn't be accessed after returning to the pool.
 func (p *Pool) Put(b *ByteBuffer) {
-	idx := index(len(b.B))
+	idx := index(len(b.b))
 
 	if atomic.AddUint64(&p.calls[idx], 1) > calibrateCallsThreshold {
 		p.calibrate()
 	}
 
 	maxSize := int(atomic.LoadUint64(&p.maxSize))
-	if maxSize == 0 || cap(b.B) <= maxSize {
+	if maxSize == 0 || cap(b.b) <= maxSize {
 		b.Reset()
 		p.pool.Put(b)
 	}
